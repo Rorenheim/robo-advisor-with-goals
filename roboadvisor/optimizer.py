@@ -78,10 +78,14 @@ class PortfolioOptimizer:
         optimize_for_volatility - Finds the optimal portfolio that provides the smallest volatility.      
     '''
     
+    
     def __init__(self,
                  assets,
+                 goal=20000,
+                 years=10,
+                 starting_cash=2000,
                  risk_tolerance=5.0,
-                 portfolio_size=5,
+                 portfolio_size=10,
                  max_iters=None, 
                  print_init=True, 
                  max_pos=1.0,
@@ -91,21 +95,44 @@ class PortfolioOptimizer:
         Initiation calls four functions and instatiates 7 attributes.
         '''
         matplotlib.use('PS')
-        self.max_pos_=max_pos
-        self.min_pos_=min_pos
-        self.print_init_=print_init
-        self.asset_basket_=assets
-        self.max_iters_=max_iters
-        self.portfolio_size_=portfolio_size
-        self.assets_=assets
-        self.num_assets_=portfolio_size
-        self.risk_tolerance_=risk_tolerance
-        self.auth_token_=config.QUANDL_KEY
-        self.sim_iterations_=2500
+        self.max_pos_ = max_pos
+        self.min_pos_ = min_pos
+        self.print_init_ = print_init
+        self.asset_basket_ = assets
+        self.max_iters_ = max_iters
+        self.portfolio_size_ = portfolio_size
+        self.assets_ = assets
+        self.num_assets_ = portfolio_size
+        self.risk_tolerance_ = risk_tolerance
+        self.goal_ = goal
+        self.years_ = years
+        self.starting_cash_ = starting_cash
+        self.auth_token_ = config.QUANDL_KEY
+        self.sim_iterations_ = 2500
         self._fetch_data()
-        self.optimize_for_sharpe()
-        self.optimize_for_return()
-        self.optimize_for_volatility()
+        self.optimize_for_goal()
+
+    def optimize_for_goal(self):
+        '''
+        Optimization function to achieve the financial goal.
+        '''
+        # Calculate the required annual return to meet the goal
+        required_return = (self.goal_ / self.starting_cash_) ** (1 / self.years_) - 1
+
+        # Placeholder: Implement the actual optimization logic here
+        # Use self.assets_, self.risk_tolerance_, self.portfolio_size_, etc.
+        optimized_portfolio = self._find_optimal_portfolio(required_return)
+
+        return optimized_portfolio
+
+    def _find_optimal_portfolio(self, required_return):
+        '''
+        Placeholder function to select the optimal portfolio
+        '''
+        # Example logic: Replace with actual portfolio selection logic
+        selected_assets = self.assets_[:self.portfolio_size_]
+        return selected_assets
+        
            
     def _fetch_data(self):
         '''
