@@ -5,6 +5,7 @@
 
 # Standard Python library imports
 import matplotlib
+import datetime
 import pandas as pd
 import numpy as np
 import time
@@ -119,10 +120,11 @@ class PortfolioOptimizer:
         self.return_matrix_results = []
         self.asset_combo_list = []
         df = pd.DataFrame()
+        end_date = datetime.datetime.today().strftime('%Y-%m-%d')
         
         for asset in self.asset_basket_:
             try:
-                temp = yf.download(asset, start="2000-01-01", end="2024-06-06")
+                temp = yf.download(asset, start="2000-01-01", end=end_date)
                 if not temp.empty:
                     temp = temp[['Adj Close']]  # Use Adjusted Close prices
                     temp.columns = [f"{asset}_Adj_Close"]
