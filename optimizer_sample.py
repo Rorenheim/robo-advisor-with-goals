@@ -3,7 +3,7 @@ from roboadvisor.optimizer import PortfolioOptimizer
 
 if __name__=='__main__':
     assets=['TLT','SPY','GDX','AAPL','FXI','GLD','VDE','UUP','VT','IYF','EWI','TIP']
-    optimizer = PortfolioOptimizer(assets, portfolio_size=5)
+    optimizer = PortfolioOptimizer(assets, portfolio_size=5, max_pos = 0.30, min_pos = 0.05)
 
     # Optional custom P, Q, omega matrices
 P = np.array([[1, 0, -1] + [0] * (len(assets) - 3)])  # Example custom P matrix

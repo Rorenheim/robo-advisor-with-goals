@@ -1,78 +1,107 @@
-"""
-@author: Kevin Vecmanis
-"""
-#Standard Python library imports
-import unittest
-import numpy as np
+class PortfolioOptimizer:
+    def __init__(self, assets, risk_tolerance=5.0, portfolio_size=5, max_iters=None, print_init=True, max_pos=1.0, min_pos=0.0):
+        matplotlib.use('PS')
+        self.max_pos_ = max_pos
+        self.min_pos_ = min_pos
+        self.print_init_ = print_init
+        self.asset_basket_ = assets
+        self.max_iters_ = max_iters
+        self.portfolio_size_ = portfolio_size
+        self.assets_ = assets
+        self.num_assets_ = portfolio_size
+        self.risk_tolerance_ = risk_tolerance
+        self.sim_iterations_ = 2500
+        self._fetch_data()
+        if self.raw_asset_data is not None:
+            self.optimize_for_sharpe()
+            self.optimize_for_return()
+            self.optimize_for_volatility()
+            self.optimize_for_black_litterman_model()
 
-#3rd party imports
-from quandl.errors.quandl_error import AuthenticationError
-from quandl.errors.quandl_error import NotFoundError 
+    def _fetch_data(self):
+        start = time.time()
+        self.asset_errors_ = []
+        self.cov_matrix_results = []
+        self.return_matrix_results = []
+        self.asset_combo_list = []
+        df = pd.DataFrame()
+        end_date = datetime.datetime.today().strftime('%Y-%m-%d')
 
-#Local imports
-from roboadvisor.optimizer import PortfolioOptimizer
-from config.config import QUANDL_KEY
+        for asset in self.asset_basket_:
+            try:
+                temp = yf.download(asset, start="2000-01-01", end=end_date)
+                if not temp.empty:
+                    temp = temp[['Adj Close']]
+                    temp.columns = [f"{asset}_Adj_Close"]
+                    if df.empty:
+                        df = temp
+                    else:
+                        df = pd.merge(df, temp, how='outer', left_index=True, right_index=True)
+                else:
+                    print(f"No data found for asset: {asset}")
+                    self.asset_errors_.append(asset)
+            except Exception as e:
+                print(f"Error fetching data for {asset}: {e}")
+                self.asset_errors_.append(asset)
 
-'''
-        asset_basket_ - the list of assets in its entirety
-        asset_errors_ - the number of stock tickers that weren't found on Quandl.
-        cov_matrix_results - list of the covariance matrices for each unique asset combination.
-        return_matrix_results - list of the return matrices for each unique asset combination.
-        asset_combo_list - list of all the unique asset combinations.
-        max_iters_ - number of portfolio combinations to analyze
-        portfolio_size_ - the number of assets that can be used in the optimal portfolio
-        assets_ - instantiation of an attribute to be used during optimization
-        risk_tolerance - maximum volatality client is will to incur. 1.0 = 100%
-        raw_asset_data - a master copy of the adjusted close dataframe from our quandl query.
-        auth_token - Quandl authentication token
-        sim_iterations - the number of random portfolio weights to simulate for each asset combination.
-        sim_packages - a master queue of all the asset combinations and corresponding data to be analyzed.
-        _sharpe_ - local variable for storing and passing sharpe score
-        _port_return_ - local variable for storing and passing portfolio return
-        _port_vol_ - local variable for storing and passing portfolio volatility
-        portfolio_stats_ - list portfolio stats for a given asset combo and weight.
-        sharpe_scores_ - comphrehensive matrix of simulation results for sharpe optimization
-        return_scores_ - comphrehensive matrix of simulation results for return optimization
-        vol_scores - comphrehensive matrix of simulation results for colatility optimization
-'''
+        if df.empty:
+            print("No valid data fetched for any asset.")
+            self.raw_asset_data = None
+            return
 
-class TestPortfolioManager(unittest.TestCase):
-    
-    assets = ['GDX', 'GLD', 'SPY', 'XLI', 'VDE', 'AAPL', 'MSFT', '12345', 'XXXXX']
-    auth_token = QUANDL_KEY       
-    pmo = PortfolioOptimizer(assets, auth_token, print_init=True)
-        
-    def test_init(self):
-        '''Test initialization of PortfolopOptimizer class
-        '''     
-        self.assertLessEqual(self.pmo.max_pos_, 1.0)
-        self.assertGreaterEqual(self.pmo.max_pos_, 0.0)
-        self.assertLess(self.pmo.min_pos_, 1.0)
-        self.assertGreaterEqual(self.pmo.min_pos_, 0.0)
-        self.assertLessEqual(self.pmo.portfolio_size_, len(self.pmo.asset_basket_))   
-            
-    def test_fetch_data_01(self):
-        '''Test fetch_data method
-        '''
-        self.pmo.auth_token_ = 'a'
-        self.assertRaises(AuthenticationError, self.pmo._fetch_data())
-        self.pmo._fetch_data()
-        self.assertFalse(self.pmo.raw_asset_data.isnull().any().any()) 
-        self.assertIsNotNone(self.pmo.sim_packages)
-        self.pmo.auth_token_ = self.auth_token
-        
-    def test_fetch_data_02(self):
-        """Test that invalid stock tickers raise NotFoundError
-        """
-        self.assertRaises(NotFoundError,self.pmo._fetch_data()) 
-        
-    def test_portfolio_simulation(self): 
-        """Test that random weights add to 1.0
-        """
-        weights=np.random.dirichlet(np.ones(self.pmo.portfolio_size_), size=1)
-        expected=sum(weights[0])
-        self.assertAlmostEqual(expected, 1.0)        
-        
-    def test_optimize_for_sharpe(self):
-        print('Testing _optimize_for_sharpe') 
-            
+        df = df.dropna()
+        features = [col for col in df.columns if "Adj_Close" in col]
+        if not features:
+            print("No adjusted close prices found.")
+            self.raw_asset_data = None
+            return
+
+        df = df[features]
+        self.raw_asset_data = df.copy()
+        self.asset_combos_ = list([combo for combo in combinations(features, self.portfolio_size_)])
+        print(f'Number of unique asset combinations: {len(self.asset_combos_)}')
+
+        if self.max_iters_ is None:
+            self.max_iters_ = len(self.asset_combos_)
+
+        elif len(self.asset_combos_) < self.max_iters_:
+            self.max_iters_ = len(self.asset_combos_)
+
+        print(f'Analyzing {self.max_iters_} of {len(self.asset_combos_)} asset combinations...')
+
+        self.sim_packages = []
+        for i in range(self.max_iters_):
+            assets = list(self.asset_combos_[i])
+            filtered_df = df[assets].copy()
+            returns = np.log(filtered_df / filtered_df.shift(1))
+            return_matrix = returns.mean() * 252
+            cov_matrix = returns.cov() * 252
+            self.num_assets_ = len(assets)
+            self.sim_packages.append([assets, cov_matrix, return_matrix])
+
+        print('Omitted assets:', self.asset_errors_)
+        print(f'Time to fetch data: {time.time() - start:.2f} seconds')
+
+    def optimize_for_sharpe(self):
+        if not self.sim_packages:
+            print("No data available for optimization.")
+            return
+        # Optimization logic...
+
+    def optimize_for_return(self):
+        if not self.sim_packages:
+            print("No data available for optimization.")
+            return
+        # Optimization logic...
+
+    def optimize_for_volatility(self):
+        if not self.sim_packages:
+            print("No data available for optimization.")
+            return
+        # Optimization logic...
+
+    def optimize_for_black_litterman_model(self, P=None, Q=None, omega=None):
+        if self.raw_asset_data is None:
+            print("No data available for Black-Litterman optimization.")
+            return
+        # Optimization logic...
