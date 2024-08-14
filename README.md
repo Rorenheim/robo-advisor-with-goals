@@ -1,237 +1,119 @@
-# The VanAurum Open Robo-Advisor
+# The Ultimate Open Robo-Advisor Project
 
-This is an open source initiative to make available the tools required for building your own optimal Markowitz portfolios and finding the best rebalancing strategy factoring in your transaction costs. The financial world is moving towards zero cost ETFs, which make even the lowest-cost robo-advisors in the industry seem expensive.  
+*Originally developed by Kevin Vecmanis (VanAurum open robo-advisor)*
 
-The mission of this project is to put industry leading portfolio management tools into the hands of individuals for zero cost.
+This open-source initiative provides the necessary tools for building optimal Markowitz portfolios and determining the best rebalancing strategy, considering transaction costs. With the financial world moving towards zero-cost ETFs, this project aims to empower individuals with industry-leading portfolio management tools at no cost.
 
-## Usage
+## Mission
 
-### Algorithmic Portfolio Optimization
+The mission of this project is to place powerful portfolio management tools into the hands of individuals at zero cost, helping users create and manage optimal investment portfolios.
 
-#### Example 1: Building a portfolio of 5 assets from a list of 9 assets. No additional contraints
+## Files and Descriptions
 
-In this example we build a portfolio with no asset size constraints. Meaning, a single ETF or stock from our list can be 100% of
-the portfolio.
+### 1. **optimizer.py**
+This file contains the main `PortfolioOptimizer` class, which is used to optimize a portfolio based on various criteria such as Sharpe ratio, pure return, volatility, and the Black-Litterman model. The class utilizes historical data fetched from Yahoo Finance and offers methods for fetching data, simulating portfolios, calculating portfolio statistics, and optimizing for different performance metrics.
 
-```Python
-from roboadvisor.optimizer import PortfolioOptimizer
+### 2. **optimizer_past.py**
+This module is a modified version of the `PortfolioOptimizer` class, specifically designed for backtesting with historical data. It includes an additional parameter, `end_date`, to define the end of the historical period for backtesting purposes. The methods in this class are similar to those in `optimizer.py` but tailored for backtesting scenarios.
 
-assets=['TLT','SPY','GDX','AAPL','FXI','GLD','VDE','UUP','VT']
-optimal_portfolio=PortfolioOptimizer(assets, portfolio_size=5,max_pos=1.0, min_pos=0.0)
+### 3. **optimizer_sample.py**
+This script provides a sample implementation of the `PortfolioOptimizer` class. It demonstrates how to initialize the optimizer with a set of assets and parameters and includes an optional custom implementation of the Black-Litterman model using custom P, Q, and omega matrices.
+
+### 4. **optimizer_sample_past.py**
+This script offers a sample implementation of the `PortfolioOptimizerPast` class, used for backtesting. It includes helper functions to format portfolio data and stores the results of different optimization strategies. The script also demonstrates how to optimize a portfolio using the Sharpe ratio, pure return, minimal volatility, and the Black-Litterman model.
+
+### 5. **backtesting.py**
+This script is designed to backtest portfolios based on historical data. It uses the results generated from optimizer scripts and simulates the performance of portfolios from a purchase date to the current date. The script provides detailed outputs, including initial investments, portfolio values, and gains or losses over time. It also saves the results to text files for further analysis.
+
+### 6. **visualization.py**
+This module includes functions to parse backtesting results and generate visualizations such as pie charts, portfolio growth charts, and combined value comparisons. The charts are saved as image files, allowing for easy review and presentation of portfolio performance over time.
+
+### 7. **sample_results.py**
+This file contains sample results from various portfolio optimization strategies, including Sharpe ratio, pure return, minimal volatility, and Black-Litterman. The results are stored in a dictionary format, making them easy to access and use for backtesting or further analysis.
+
+## Installation Guide
+
+To set up and run the portfolio optimization tools in this repository, follow these steps:
+
+### Prerequisites
+
+Ensure you have the following installed on your system:
+
+- **Python 3.7+**
+- **pip** (Python package installer)
+
+### Step 1: Clone the Repository
+
+Clone this repository to your local machine using the following command:
+
+```bash
+git clone https://github.com/Rorenheim/robo-advisor-yfinance-markowitz-black-litterman.git
+
+### Step 2: Navigate to the Repository Directory
+Change into the directory where the repository was cloned:
+
+```bash
+cd repository-name
 ```
 
-#### Output...
+### Step 3: Create a Virtual Environment (Optional but Recommended)
+Create and activate a virtual environment to manage dependencies:
 
-```
-...Maximum position size: 100%
-...Minimum position size: 0%
-...Number of unique asset combinations: 126
-...Analyzing 126 of 126 asset combinations...
-...Omitted assets: []
+```bash
+# On macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
 
------------------------------------------------
------ Portfolio Optimized for Sharpe Ratio ----
------------------------------------------------
-
-('TLT', 0.3207)
-('SPY', 0.1373)
-('AAPL', 0.1723)
-('GLD', 0.0711)
-('UUP', 0.2987)
-
-Optimal Portfolio Return: 7.4065
-Optimal Portfolio Volatility: 7.1075
-Optimal Portfolio Sharpe Ratio: 1.0421
-
------------------------------------------------
------ Portfolio Optimized for Pure Return -----
------------------------------------------------
-
-('AAPL', 1.0)
-('GLD', 0.0)
-('VDE', 0.0)
-('UUP', 0.0)
-('VT', 0.0)
-
-Optimal Portfolio Return: 22.6168
-Optimal Portfolio Volatility: 29.8647
-Optimal Portfolio Sharpe Ratio: 0.7573
-
------------------------------------------------------
------ Portfolio Optimized for Minimal Volatility ----
------------------------------------------------------
-
-('TLT', 0.1644)
-('SPY', 0.0)
-('GLD', 0.1268)
-('UUP', 0.5449)
-('VT', 0.1638)
-Optimal Portfolio Return: 2.755
-Optimal Portfolio Volatility: 4.651
-Optimal Portfolio Sharpe Ratio: 0.5924
+# On Windows
+python -m venv venv
+venv\Scripts\activate
 ```
 
-#### Example 2: Building a portfolio of 5 assets from a list of 12 assets with constraints.
+### Step 4: Install Required Python Packages
+Install the necessary packages:
 
-In this example we're going to constrain the maximum position size of a single asset to be 30%, and the minumum size to be 5%.
-
-```Python
-assets = ['TLT','SPY','GDX','AAPL','FXI','GLD','VDE','UUP','VT','IYF','EWI','TIP']
-optimal_portfolio = PortfolioOptimizer(assets, portfolio_size = 5, max_pos = 0.30, min_pos = 0.05)
+```bash
+pip install matplotlib pandas numpy yfinance scipy
 ```
 
-#### Output...
-```
-...Maximum position size: 30%
-...Minimum position size: 5%
-...Number of unique asset combinations: 792
-...Analyzing 792 of 792 asset combinations...
-...Omitted assets: []
+### Step 5: Running the Scripts
 
------------------------------------------------
------ Portfolio Optimized for Sharpe Ratio ----
------------------------------------------------
+**Portfolio Optimization**
+To optimize a portfolio, you can run the sample script:
 
-('TLT', 0.1981)
-('SPY', 0.1089)
-('AAPL', 0.1495)
-('UUP', 0.2435)
-('TIP', 0.3)
-
-Optimal Portfolio Return: 6.5281
-Optimal Portfolio Volatility: 6.1652
-Optimal Portfolio Sharpe Ratio: 1.0589
-
------------------------------------------------
------ Portfolio Optimized for Pure Return -----
------------------------------------------------
-
-('TLT', 0.05)
-('SPY', 0.3)
-('AAPL', 0.3)
-('VT', 0.05)
-('IYF', 0.3)
-
-Optimal Portfolio Return: 12.1792
-Optimal Portfolio Volatility: 21.8554
-Optimal Portfolio Sharpe Ratio: 0.5573
-
------------------------------------------------------
------ Portfolio Optimized for Minimal Volatility ----
------------------------------------------------------
-
-('TLT', 0.1276)
-('SPY', 0.1693)
-('GLD', 0.1031)
-('UUP', 0.3)
-('TIP', 0.3)
-
-Optimal Portfolio Return: 3.6682
-Optimal Portfolio Volatility: 4.3676
-Optimal Portfolio Sharpe Ratio: 0.8399
+```bash
+python optimizer_sample.py
 ```
 
-## The Rebalancer Class
+**Backtesting**
+To backtest the optimized portfolio strategies:
 
-The intention of the rebalancer class is to understand, probabilistically, how the portfolio should be maintained going forward. It also reveals how much value might be added for the client depending on the advisory model and management principles. 
-
-The class can account for the following parameters:
-* __High Threshold__: The upper deviation, as a percentage, that a single issue can drift before rebalancing is triggered.
-* __Low Threshold__: The lower deviation, as a percentage, that a single issue can drift before rebalancing is triggered.
-* __Trade cost__: Cost to execute a single trade, including commissions.
-* __Fractional Units__: Whether or not you are permitted to buy fractional units.
-* __Starting cash balance__: The cash balance to begin the portfolio simulation with.
-* __Slippage (optional)__: A custom function can be presented to represent deviations from bid/ask.
-
-The rebalancer class takes a portfolio object as an argument as well. The simulation in this example runs over 10 years (2520 trading days).
-
-#### Example 1: Simulating a 5-asset portfolio.
-
-```Python
-from roboadvisor.rebalancer import RebalancingSimulator
-from roboadvisor.optimizer import PortfolioOptimizer
-
-assets = ['GLD', 'SPY', 'TLT', 'QQQ', 'XLI']
-portfolio = PortfolioOptimizer(assets , portfolio_size = 5, max_pos = 0.3, min_pos = 0.05)
-rebalancer = RebalancingSimulator(portfolio, frac_units=False, trade_cost=5.99, starting_cash=20000, max_thresh=1.1, min_thresh=0.9)
-rebalancer.run_simulation()
+```bash
+python backtesting.py
 ```
 
-#### Output...
-```
-SIMULATION PARAMETERS:
-...fractional share purchases permitted? False
-...portfolio size: 5 assets
-...trade cost: $5.99
-...max position size: 30%
-...min position size: 5%
-...beginning cash value: $20,000
-...upper rebalance trigger: 10% above allocation
-...lower rebalance trigger: 10% below allocation
-...Cash balance after portfolio initialization: $388.99
+**Visualization**
+To generate visualizations of the portfolio performance:
 
-Target weights: [('GLD', 26.93%), ('SPY', 7.51%), ('TLT', 30%), ('QQQ', 30%), ('XLI', 5.57%)]
-
-SIMULATION REPORT
------------------
-Rebalancing simulation finished in: 0.73 seconds
-Total number of trades executed: 178
-Cost per trade: 5
-Total trading costs: 890
-Maximum cash balance: 4337.12
-Minimum cash balance: -5.96
-Average cash balance: 881.49
-Fractional units allowed? False
-
-Weight metrics for: GLD
--------------------------
-Target portfolio weight: 0.2693
-Standard deviation of GLD portfolio weight: 0.0168
-Maximum weight reached for GLD: 0.2989
-Minimum weight reached for GLD: 0.1347
-Average of GLD portfolio weight: 0.2637
-
-Weight metrics for: SPY
--------------------------
-Target portfolio weight: 0.0751
-Standard deviation of SPY portfolio weight: 0.0043
-Maximum weight reached for SPY: 0.089
-Minimum weight reached for SPY: 0.035
-Average of SPY portfolio weight: 0.0738
-
-Weight metrics for: TLT
--------------------------
-Target portfolio weight: 0.3
-Standard deviation of TLT portfolio weight: 0.0173
-Maximum weight reached for TLT: 0.3314
-Minimum weight reached for TLT: 0.1489
-Average of TLT portfolio weight: 0.2929
-
-Weight metrics for: QQQ
--------------------------
-Target portfolio weight: 0.3
-Standard deviation of QQQ portfolio weight: 0.0147
-Maximum weight reached for QQQ: 0.3361
-Minimum weight reached for QQQ: 0.1471
-Average of QQQ portfolio weight: 0.2985
-
-Weight metrics for: XLI
--------------------------
-Target portfolio weight: 0.0557
-Standard deviation of XLI portfolio weight: 0.0027
-Maximum weight reached for XLI: 0.0637
-Minimum weight reached for XLI: 0.0276
-Average of XLI portfolio weight: 0.0556
+```bash
+python visualization.py
 ```
 
-#### Asset weight history
-![Asset Weight History](https://raw.githubusercontent.com/VanAurum/robo-advisor/master/static/asset_weight_history.png)
+### Step 6: Customize and Extend
+You can customize the scripts by modifying the asset lists, optimization parameters, and other settings in the respective Python files. The scripts are modular and can be adapted to different use cases, such as optimizing portfolios with different asset classes or using alternative data sources.
 
-#### Cash balance history
-![Cash History](https://raw.githubusercontent.com/VanAurum/robo-advisor/master/static/cash_level.png)
+### Step 7: Deactivate the Virtual Environment
+Once you're done, you can deactivate the virtual environment:
 
-#### Simulated portfolio value
-![rebalancing sim](https://raw.githubusercontent.com/VanAurum/robo-advisor/master/static/rebalancing_sim.png)
+```bash
+deactivate
+```
 
-#### Simulated trade history
-![trade history](https://raw.githubusercontent.com/VanAurum/robo-advisor/master/static/trade_his.png)
+### Step 8: Update the Repository
+If you make changes to the scripts, commit your changes and push them to the GitHub repository:
+
+```bash
+git add .
+git commit -m "Describe your changes here"
+git push origin main
+```
