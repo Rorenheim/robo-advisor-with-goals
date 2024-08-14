@@ -15,6 +15,7 @@ from itertools import combinations
 import scipy.optimize as optimize
 from operator import itemgetter
 from numpy.linalg import inv
+from multiprocessing import Pool, cpu_count
 
 # 3rd party imports
 import yfinance as yf
@@ -107,7 +108,7 @@ class PortfolioOptimizer:
     def _fetch_data(self):
         '''
         This function fetches data from yfinance using the list of assets in asset_basket
-        and declares additional class attributes pertaining to the data needed for analysis.
+        in a single request and declares additional class attributes pertaining to the data needed for analysis.
 
         asset_errors_
         asset_combos_
@@ -122,39 +123,26 @@ class PortfolioOptimizer:
         self.cov_matrix_results = []
         self.return_matrix_results = []
         self.asset_combo_list = []
-        df = pd.DataFrame()
         end_date = datetime.datetime.today().strftime('%Y-%m-%d')
 
-        for asset in self.asset_basket_:
-            try:
-                temp = yf.download(asset, start="2000-01-01", end=end_date)
-                if not temp.empty:
-                    temp = temp[['Adj Close']]  # Use Adjusted Close prices
-                    temp.columns = [f"{asset}_Adj_Close"]
-                    if df.empty:
-                        df = temp
-                    else:
-                        df = pd.merge(df, temp, how='outer', left_index=True, right_index=True)
-                else:
-                    print(f"No data found for asset: {asset}")
-                    self.asset_errors_.append(asset)
-            except Exception as e:
-                print(f"Error fetching data for {asset}: {e}")
-                self.asset_errors_.append(asset)
+        # Fetch all data in one request
+        try:
+            df = yf.download(self.asset_basket_, start="2000-01-01", end=end_date)['Adj Close']
+        except Exception as e:
+            print(f"Error fetching data: {e}")
+            self.asset_errors_ = self.asset_basket_
+            print("No valid data fetched for any asset.")
+            return
+
+        # Drop any rows with missing data
+        df = df.dropna()
 
         if df.empty:
             print("No valid data fetched for any asset.")
             return
 
-        df = df.dropna()
-        features = [col for col in df.columns if "Adj_Close" in col]
-        if not features:
-            print("No adjusted close prices found.")
-            return
-
-        df = df[features]
         self.raw_asset_data = df.copy()
-        self.asset_combos_ = list([combo for combo in combinations(features, self.portfolio_size_)])
+        self.asset_combos_ = list([combo for combo in combinations(df.columns, self.portfolio_size_)])
         print(f'Number of unique asset combinations: {len(self.asset_combos_)}')
 
         if self.max_iters_ is None:
@@ -178,6 +166,36 @@ class PortfolioOptimizer:
         print('Omitted assets:', self.asset_errors_)
         print(f'Time to fetch data: {time.time() - start:.2f} seconds')
 
+    def _simulate_single_portfolio(self, sim):
+        '''
+        Simulates portfolio returns, volatility, and Sharpe ratios for a single asset combination.
+
+        Parameters:
+        ----------
+            sim: list, a single simulation package containing assets, covariance matrix, and return matrix.
+
+        Returns:
+        --------
+            tuple, containing the assets, portfolio returns, volatilities, and Sharpe ratios.
+        '''
+        returns = np.array(sim[2])
+        cov_matrix = np.array(sim[1])
+        assets = sim[0]
+
+        port_sharpes = []
+        port_returns = []
+        port_vols = []
+
+        for _ in range(self.sim_iterations_):
+            weights = np.random.dirichlet(np.ones(self.num_assets_), size=1)[0]
+            ret = np.sum(returns * weights)
+            vol = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+            port_returns.append(ret)
+            port_vols.append(vol)
+            port_sharpes.append(ret / vol)
+
+        return (assets, np.array(port_returns), np.array(port_vols), np.array(port_sharpes))
+
     def portfolio_simulation(self):
         '''
         Runs a simulation by randomly selecting portfolio weights a specified
@@ -190,38 +208,10 @@ class PortfolioOptimizer:
             port_vols: array, array of all the simulated portfolio volatilities.
         '''
         start = time.time()
-        iterations = self.sim_iterations_
         self.simulation_results = []
 
-        # Take a copy of simulation packages so that the original copy isn't altered
-        sim_packages = self.sim_packages.copy()
-
-        # Loop through each return and covariance matrix from all the asset combos.
-        for _ in range(len(self.sim_packages)):
-            # Pop a simulation package and load returns, cov_matrix, and asset list from it.
-            sim = sim_packages.pop()
-            returns = np.array(sim[2])
-            cov_matrix = np.array(sim[1])
-            assets = sim[0]
-
-            port_sharpes = []
-            port_returns = []
-            port_vols = []
-
-            for _ in range(iterations):
-                weights = np.random.dirichlet(np.ones(self.num_assets_), size=1)
-                weights = weights[0]
-                ret = np.sum(returns * weights)
-                vol = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-                port_returns.append(ret)
-                port_vols.append(vol)
-                port_sharpes.append(ret / vol)
-
-            # Declare additional class attributes from the results
-            port_returns = np.array(port_returns)
-            port_vols = np.array(port_vols)
-            port_sharpes = np.array(port_sharpes)
-            self.simulation_results.append([assets, port_returns, port_vols, port_sharpes])
+        with Pool(cpu_count()) as pool:
+            self.simulation_results = pool.map(self._simulate_single_portfolio, self.sim_packages.copy())
 
         print('---')
         print(f'Time to simulate portfolios: {time.time() - start:.2f} seconds')
@@ -510,8 +500,8 @@ class PortfolioOptimizer:
 
         optimal_weights = result.x
 
-        # Step 5: Strip out '_Adj_Close' suffix and keep only top 'portfolio_size' assets
-        tickers = [ticker.replace('_Adj_Close', '') for ticker in self.raw_asset_data.columns]
+        # Step 5: Ensure the tickers match the available tickers in BL_return_vector
+        tickers = self.raw_asset_data.columns
         sorted_weights = sorted(zip(tickers, optimal_weights), key=lambda x: -x[1])[:self.portfolio_size_]
 
         # Ensure the sum of the top weights is 1
@@ -521,8 +511,8 @@ class PortfolioOptimizer:
 
         # Select the corresponding returns and covariance matrix for the chosen assets
         selected_tickers = [ticker for ticker, _ in sorted_weights]
-        selected_return_vector = BL_return_vector[[ticker + '_Adj_Close' for ticker in selected_tickers]]
-        selected_cov_matrix = market_cov.loc[selected_return_vector.index, selected_return_vector.index]
+        selected_return_vector = BL_return_vector[selected_tickers]
+        selected_cov_matrix = market_cov.loc[selected_tickers, selected_tickers]
 
         # Calculate portfolio metrics based on selected assets
         optimal_portfolio_return = np.dot(final_weights, selected_return_vector)
@@ -545,3 +535,4 @@ class PortfolioOptimizer:
 
         # Return the optimized portfolio weights
         return dict(sorted_weights)
+
