@@ -9,7 +9,8 @@ def format_portfolio(portfolio):
     return portfolio[0], formatted_portfolio, round(float(portfolio[2]), 4), round(float(portfolio[3]), 4), round(float(portfolio[4]), 4)
 
 if __name__ == '__main__':
-    assets = ['TLT', 'SPY', 'GDX', 'AAPL', 'FXI', 'GLD', 'VDE', 'UUP', 'VT', 'IYF', 'EWI', 'TIP']
+    assets = ['AAPL', 'MSFT', 'GOOG', 'AMZN', 'META', 'INTC']
+
     optimizer = PortfolioOptimizerPast(assets, portfolio_size=5, end_date='2014-06-06', max_pos=0.30, min_pos=0.05)
 
     # Store results in a dictionary
