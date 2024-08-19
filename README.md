@@ -2,7 +2,7 @@
 
 *Originally developed by Kevin Vecmanis (VanAurum open robo-advisor)*
 
-This open-source initiative provides the necessary tools for building optimal Markowitz portfolios and determining the best rebalancing strategy, considering transaction costs. With the financial world moving towards zero-cost ETFs, this project aims to empower individuals with industry-leading portfolio management tools at no cost.
+The original project only included a portfolio optimizer and a rebalancer, but what if you don't know where to invest? And how to deal with backtesting? And what if you think MPT is outdated and the Black Litterman strategy makes more sense for you? Since I had all these questions, I decided to develop an ultimate tool that provides a list of assets for building a portfolio and gives you all the necessary tools for backtesting your portfolio and even visualizes it for better understanding.
 
 ## Mission
 
