@@ -1,0 +1,16 @@
+-----------------------------------------------
+----- Portfolio Backtest Results (Pure Return) ----
+-----------------------------------------------
+
+2014-06-06:
+AMZN | Weight: 1.0000 | Purchase price: $16.18 | QTY: 618.0 | Total value: $9998.31
+
+Money spent: $9998.31
+Money left: $1.69
+
+2024-08-15:
+AMZN | Change over period: +951.40% | Total value: $105121.80 | Gain/Loss: $+95123.49
+
+Total value: $105121.80
+Total gain/loss: $95123.49
+Total change over time: 951.40%

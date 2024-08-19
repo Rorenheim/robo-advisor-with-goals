@@ -9,9 +9,9 @@ def format_portfolio(portfolio):
     return portfolio[0], formatted_portfolio, round(float(portfolio[2]), 4), round(float(portfolio[3]), 4), round(float(portfolio[4]), 4)
 
 if __name__ == '__main__':
-    assets = ['AAPL', 'MSFT', 'GOOG', 'AMZN', 'META', 'INTC']
+    assets = ['AAPL', 'IVV', 'SPY', 'VOO', 'DIA', 'MDY', 'SMH', 'IWB', 'VTI', 'VHT', 'VV', 'VPU', 'VDC', 'VIG', 'IWO', 'VO', 'QUAL', 'MTUM', 'VIS', 'IBB', 'IVE', 'VTV', 'VBK', 'URTH', 'VB', 'VOOV', 'IAI', 'BERZ', 'XLV', 'IWD', 'IWL', 'SMLV', 'IDU', 'ACWV', 'MGV', 'RSP', 'SDY', 'VXF', 'NUGT', 'ESGU', 'IJT', 'VOE', 'ITOT', 'VYM', 'ACWI', 'JNUG', 'VT', 'USMV', 'IOO', 'XLU', 'BKLC', 'GSLC', 'IXJ', 'FTCS', 'ESGV', 'IYF', 'BBUS', 'VIGI', 'SPMO', 'XLI', 'XMMO', 'AZO', 'BKNG', 'GWW', 'ORLY', 'LMT', 'MUSA', 'GS', 'BLK', 'UTHR', 'URI', 'CASY', 'HCA', 'WTW', 'MCK', 'PH', 'ELV', 'FSLR', 'META', 'PGR', 'ANF', 'CRUS', 'UHS', 'DY', 'RGA', 'COR', 'AXP', 'DKS', 'FDX', 'HUM', 'TMUS', 'IESC', 'AGYS', 'CHKP', 'LNTH', 'AON', 'GRMN', 'FIX', 'GD', 'TSCO', 'CBOE']
 
-    optimizer = PortfolioOptimizerPast(assets, portfolio_size=5, end_date='2014-06-06', max_pos=0.30, min_pos=0.05)
+    optimizer = PortfolioOptimizerPast(assets, portfolio_size=12, end_date='2020-06-06')
 
     # Store results in a dictionary
     results = {}

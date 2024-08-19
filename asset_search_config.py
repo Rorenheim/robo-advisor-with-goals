@@ -1,7 +1,7 @@
 # Configuration for asset search and filtering
 
 # Total number of assets to include in the final list
-TOTAL_ASSETS = 10
+TOTAL_ASSETS = 100
 
 # Ratio of asset types in the final portfolio.
 # The sum of all ratios should equal 1.

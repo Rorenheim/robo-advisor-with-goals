@@ -1,0 +1,7 @@
+matplotlib
+pandas
+numpy
+scipy
+yfinance
+yahoo_fin
+prophet

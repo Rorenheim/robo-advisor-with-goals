@@ -1,0 +1,24 @@
+-----------------------------------------------
+----- Portfolio Backtest Results (Black-Litterman) ----
+-----------------------------------------------
+
+2014-06-06:
+XLK | Weight: 0.2000 | Purchase price: $33.21 | QTY: 60.0 | Total value: $1992.83
+QQQ | Weight: 0.2000 | Purchase price: $84.92 | QTY: 23.0 | Total value: $1953.12
+MCD | Weight: 0.2000 | Purchase price: $79.00 | QTY: 25.0 | Total value: $1975.05
+SPY | Weight: 0.2000 | Purchase price: $161.98 | QTY: 12.0 | Total value: $1943.77
+PG | Weight: 0.2000 | Purchase price: $59.89 | QTY: 33.0 | Total value: $1976.42
+
+Money spent: $9841.19
+Money left: $158.81
+
+2024-08-15:
+XLK | Change over period: +546.87% | Total value: $12891.00 | Gain/Loss: $+10898.17
+QQQ | Change over period: +444.91% | Total value: $10642.79 | Gain/Loss: $+8689.67
+MCD | Change over period: +243.22% | Total value: $6778.75 | Gain/Loss: $+4803.70
+SPY | Change over period: +235.69% | Total value: $6525.00 | Gain/Loss: $+4581.23
+PG | Change over period: +181.84% | Total value: $5570.40 | Gain/Loss: $+3593.98
+
+Total value: $42407.94
+Total gain/loss: $32566.75
+Total change over time: 330.92%

@@ -1,0 +1,23 @@
+-----------------------------------------------
+----- Portfolio Backtest Results (Sharpe Ratio) ----
+-----------------------------------------------
+
+2014-06-06:
+MSFT | Weight: 0.3000 | Purchase price: $35.08 | QTY: 85.0 | Total value: $2981.78
+INTC | Weight: 0.1659 | Purchase price: $20.94 | QTY: 79.0 | Total value: $1654.58
+BRK | Weight: 0.0949 | Purchase price: $1.22 | QTY: 777.0 | Total value: $947.94
+PG | Weight: 0.1391 | Purchase price: $59.89 | QTY: 23.0 | Total value: $1377.50
+VTI | Weight: 0.3000 | Purchase price: $84.11 | QTY: 35.0 | Total value: $2943.90
+
+Money spent: $9905.70
+Money left: $94.30
+
+2024-08-15:
+MSFT | Change over period: +1088.32% | Total value: $35433.10 | Gain/Loss: $+32451.32
+INTC | Change over period: -4.89% | Total value: $1573.68 | Gain/Loss: $-80.90
+PG | Change over period: +181.84% | Total value: $3882.40 | Gain/Loss: $+2504.90
+VTI | Change over period: +218.48% | Total value: $9375.80 | Gain/Loss: $+6431.90
+
+Total value: $50264.98
+Total gain/loss: $40359.28
+Total change over time: 407.44%

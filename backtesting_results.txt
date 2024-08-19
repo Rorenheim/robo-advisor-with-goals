@@ -1,0 +1,124 @@
+
+Strategy: Sharpe Ratio
+Initial cash: 10000
+Purchase date: 2014-06-06
+Current date: 2024-08-15
+
+-----------------------------------------------
+----- Portfolio Backtest Results ----
+-----------------------------------------------
+
+2014-06-06:
+AAPL | Weight: 0.1495 | Purchase price: $20.43 | QTY: 73.0 | Total value: $1491.13
+MSFT | Weight: 0.3000 | Purchase price: $35.08 | QTY: 85.0 | Total value: $2981.78
+GOOG | Weight: 0.3000 | Purchase price: $27.59 | QTY: 108.0 | Total value: $2979.48
+AMZN | Weight: 0.1720 | Purchase price: $16.18 | QTY: 106.0 | Total value: $1714.92
+META | Weight: 0.0785 | Purchase price: $63.06 | QTY: 12.0 | Total value: $756.72
+
+Money spent: $9924.04
+Money left: $75.96
+
+2024-08-15:
+AAPL | Change over period: +985.45% | Total value: $16185.56 | Gain/Loss: $+14694.43
+MSFT | Change over period: +1088.32% | Total value: $35433.10 | Gain/Loss: $+32451.32
+GOOG | Change over period: +487.33% | Total value: $17499.24 | Gain/Loss: $+14519.76
+AMZN | Change over period: +951.40% | Total value: $18030.60 | Gain/Loss: $+16315.68
+META | Change over period: +735.33% | Total value: $6321.12 | Gain/Loss: $+5564.40
+
+Total value: $93469.62
+Total gain/loss: $83545.58
+Total change over time: 841.85%
+
+
+Strategy: Pure Return
+Initial cash: 10000
+Purchase date: 2014-06-06
+Current date: 2024-08-15
+
+-----------------------------------------------
+----- Portfolio Backtest Results ----
+-----------------------------------------------
+
+2014-06-06:
+MSFT | Weight: 0.0000 | Purchase price: $35.08 | QTY: 0.0 | Total value: $0.00
+GOOG | Weight: 1.0000 | Purchase price: $27.59 | QTY: 362.0 | Total value: $9986.78
+AMZN | Weight: 0.0000 | Purchase price: $16.18 | QTY: 0.0 | Total value: $0.00
+META | Weight: 0.0000 | Purchase price: $63.06 | QTY: 0.0 | Total value: $0.00
+INTC | Weight: 0.0000 | Purchase price: $20.94 | QTY: 0.0 | Total value: $0.00
+
+Money spent: $9986.78
+Money left: $13.22
+
+2024-08-15:
+MSFT | Change over period: +nan% | Total value: $0.00 | Gain/Loss: $+0.00
+GOOG | Change over period: +487.33% | Total value: $58654.86 | Gain/Loss: $+48668.08
+AMZN | Change over period: +nan% | Total value: $0.00 | Gain/Loss: $+0.00
+META | Change over period: +nan% | Total value: $0.00 | Gain/Loss: $+0.00
+INTC | Change over period: +nan% | Total value: $0.00 | Gain/Loss: $+0.00
+
+Total value: $58654.86
+Total gain/loss: $48668.08
+Total change over time: 487.33%
+
+
+Strategy: Minimal Volatility
+Initial cash: 10000
+Purchase date: 2014-06-06
+Current date: 2024-08-15
+
+-----------------------------------------------
+----- Portfolio Backtest Results ----
+-----------------------------------------------
+
+2014-06-06:
+AAPL | Weight: 0.1726 | Purchase price: $20.43 | QTY: 84.0 | Total value: $1715.83
+MSFT | Weight: 0.1869 | Purchase price: $35.08 | QTY: 53.0 | Total value: $1859.23
+GOOG | Weight: 0.2527 | Purchase price: $27.59 | QTY: 91.0 | Total value: $2510.49
+AMZN | Weight: 0.0769 | Purchase price: $16.18 | QTY: 47.0 | Total value: $760.39
+INTC | Weight: 0.3109 | Purchase price: $20.94 | QTY: 148.0 | Total value: $3099.71
+
+Money spent: $9945.64
+Money left: $54.36
+
+2024-08-15:
+AAPL | Change over period: +985.45% | Total value: $18624.48 | Gain/Loss: $+16908.65
+MSFT | Change over period: +1088.32% | Total value: $22093.58 | Gain/Loss: $+20234.35
+GOOG | Change over period: +487.33% | Total value: $14744.73 | Gain/Loss: $+12234.24
+AMZN | Change over period: +951.40% | Total value: $7994.70 | Gain/Loss: $+7234.31
+INTC | Change over period: -4.89% | Total value: $2948.16 | Gain/Loss: $-151.55
+
+Total value: $66405.65
+Total gain/loss: $56460.01
+Total change over time: 567.69%
+
+
+Strategy: Black-Litterman
+Initial cash: 10000
+Purchase date: 2014-06-06
+Current date: 2024-08-15
+
+-----------------------------------------------
+----- Portfolio Backtest Results ----
+-----------------------------------------------
+
+2014-06-06:
+AAPL | Weight: 0.3158 | Purchase price: $20.43 | QTY: 154.0 | Total value: $3145.68
+INTC | Weight: 0.3158 | Purchase price: $20.94 | QTY: 150.0 | Total value: $3141.60
+AMZN | Weight: 0.2260 | Purchase price: $16.18 | QTY: 139.0 | Total value: $2248.81
+MSFT | Weight: 0.0898 | Purchase price: $35.08 | QTY: 25.0 | Total value: $876.99
+META | Weight: 0.0526 | Purchase price: $63.06 | QTY: 8.0 | Total value: $504.48
+
+Money spent: $9917.57
+Money left: $82.43
+
+2024-08-15:
+AAPL | Change over period: +985.45% | Total value: $34144.88 | Gain/Loss: $+30999.20
+INTC | Change over period: -4.89% | Total value: $2988.00 | Gain/Loss: $-153.60
+AMZN | Change over period: +951.40% | Total value: $23643.90 | Gain/Loss: $+21395.09
+MSFT | Change over period: +1088.32% | Total value: $10421.50 | Gain/Loss: $+9544.51
+META | Change over period: +735.33% | Total value: $4214.08 | Gain/Loss: $+3709.60
+
+Total value: $75412.36
+Total gain/loss: $65494.79
+Total change over time: 660.39%
+

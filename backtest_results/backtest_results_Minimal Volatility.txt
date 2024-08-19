@@ -1,0 +1,24 @@
+-----------------------------------------------
+----- Portfolio Backtest Results (Minimal Volatility) ----
+-----------------------------------------------
+
+2014-06-06:
+AAPL | Weight: 0.0125 | Purchase price: $20.43 | QTY: 6.0 | Total value: $122.56
+MSFT | Weight: 0.8977 | Purchase price: $35.08 | QTY: 255.0 | Total value: $8945.33
+VTI | Weight: 0.0304 | Purchase price: $84.11 | QTY: 3.0 | Total value: $252.33
+MCD | Weight: 0.0362 | Purchase price: $79.00 | QTY: 4.0 | Total value: $316.01
+XLK | Weight: 0.0231 | Purchase price: $33.21 | QTY: 6.0 | Total value: $199.28
+
+Money spent: $9835.52
+Money left: $164.48
+
+2024-08-15:
+AAPL | Change over period: +985.45% | Total value: $1330.32 | Gain/Loss: $+1207.76
+MSFT | Change over period: +1088.32% | Total value: $106299.30 | Gain/Loss: $+97353.96
+VTI | Change over period: +218.48% | Total value: $803.64 | Gain/Loss: $+551.31
+MCD | Change over period: +243.22% | Total value: $1084.60 | Gain/Loss: $+768.59
+XLK | Change over period: +546.87% | Total value: $1289.10 | Gain/Loss: $+1089.82
+
+Total value: $110806.96
+Total gain/loss: $100971.44
+Total change over time: 1026.60%
