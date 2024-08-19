@@ -1,238 +1,172 @@
-import yfinance as yf
 import pandas as pd
+import yfinance as yf
 import numpy as np
-import time
-import logging
 
 np.float_ = np.float64
-
 from prophet import Prophet
-from asset_search_config import *
-import os
-
-# Setup logging
-logging.basicConfig(filename='asset_search.log', level=logging.INFO)
-
-# Ensure cmdstanpy is set as the backend for Prophet
-from prophet import Prophet
-import cmdstanpy
-
-TEMP_FILE = 'temp_final_assets.txt'
-
-def try_fetch_ticker(symbol, retries=3, delay=1):
-    """
-    Try fetching ticker information with multiple strategies for symbol conversion.
-    """
-    strategies = [
-        lambda s: s,  # Original symbol
-        lambda s: s.replace('$', '-P'),  # Replace $ with -P (preferred stock)
-        lambda s: s.replace('$', '-'),  # Replace $ with -
-        lambda s: s.replace('$', ''),  # Remove $ entirely
-        lambda s: s.replace('$', '.'),  # Replace $ with .
-        lambda s: s.replace('.', '-'),  # Replace . with -
-        lambda s: s.replace('.', ''),  # Remove . entirely
-    ]
-
-    for strategy in strategies:
-        modified_symbol = strategy(symbol)
-        for attempt in range(retries):
-            try:
-                ticker = yf.Ticker(modified_symbol)
-                if ticker.info:
-                    logging.info(f"Successfully fetched data for {modified_symbol}")
-                    return ticker, modified_symbol
-            except Exception as e:
-                logging.info(f"Error fetching {modified_symbol} (attempt {attempt + 1}/{retries}): {e}")
-                time.sleep(delay)
-        logging.info(f"Failed to fetch data for {modified_symbol} after {retries} retries.")
-
-    logging.error(f"Failed to fetch data for {symbol} after trying all conversions.")
-    return None, symbol
+from asset_search_config import TOTAL_ASSETS, ASSET_TYPE_RATIO, PE_RATIO, STOCK_POPULARITY, COUNTRY_FILTER, \
+    ADDITIONAL_FILTERS, OUTPUT_FILE, FORECAST_YEARS, PROPHET_PARAMS
 
 
-def fetch_assets_data():
-    """
-    Fetch and store asset data from Yahoo Finance.
-    Separate data by asset types and store in CSV files.
-    """
-    stock_symbols_df = pd.read_csv('stock_symbols.csv')
-    stock_symbols = stock_symbols_df['Symbol'].dropna().tolist()
-
-    failed_symbols = []
-
-    for symbol in stock_symbols:
-        ticker, final_symbol = try_fetch_ticker(symbol)
-
-        if not ticker:
-            print(f"Failed to fetch data for {symbol} after trying all conversions.")
-            failed_symbols.append(symbol)
-            continue
-
-        info = ticker.info
-        asset_type = info.get('quoteType', 'Unknown')
-
-        # Filtering by country if COUNTRY_FILTER is defined
-        if COUNTRY_FILTER and info.get('country') not in COUNTRY_FILTER:
-            continue
-
-        if asset_type in ASSET_TYPE_RATIO.keys():
-            data = {
-                'ticker': final_symbol,
-                'asset_type': asset_type,
-                'pe_ratio': info.get('forwardPE', None),
-                'market_cap': info.get('marketCap', None),
-                'dividend_yield': info.get('dividendYield', None),
-                'avg_volume': info.get('averageVolume', 0),  # Fallback to 0 if missing
-                'analyst_coverage': info.get('numberOfAnalystOpinions', 0),  # Fallback to 0 if missing
-                'institutional_ownership': info.get('heldPercentInstitutions', 0),  # Fallback to 0 if missing
-                'country': info.get('country', 'Unknown')  # Fallback to 'Unknown' if missing
-            }
-
-            # Save to corresponding CSV file by asset type
-            csv_filename = f'{asset_type}.csv'
-            df = pd.DataFrame([data])
-            df.to_csv(csv_filename, mode='a', header=not os.path.exists(csv_filename), index=False)
-
-    # Save failed symbols to a separate file
-    if failed_symbols:
-        with open('failed_symbols.txt', 'w') as f:
-            for symbol in failed_symbols:
-                f.write(f"{symbol}\n")
-        print(f"Failed to fetch data for {len(failed_symbols)} symbols. Check 'failed_symbols.txt' for details.")
-    else:
-        print("Successfully fetched data for all symbols.")
+def convert_symbol(symbol):
+    """ Convert special characters in the symbol to a more query-friendly format. """
+    return symbol.replace('$', '_').replace('.', '-')
 
 
-def filter_by_pe_ratio(df):
-    """
-    Filter assets by P/E ratio.
-    """
-    return df[(df['pe_ratio'].fillna(0) >= PE_RATIO['min']) & (df['pe_ratio'].fillna(float('inf')) <= PE_RATIO['max'])]
-
-
-def filter_by_popularity(df):
-    """
-    Filter assets by popularity.
-    Popularity is based on trading volume, analyst coverage, and institutional ownership.
-    """
-    df['popularity'] = (df['avg_volume'].fillna(0) * 0.4) + \
-                       (df['analyst_coverage'].fillna(0) * 0.3) + \
-                       (df['institutional_ownership'].fillna(0) * 0.3)
-
-    if STOCK_POPULARITY == 'High':
-        threshold = df['popularity'].quantile(0.75)
-    elif STOCK_POPULARITY == 'Medium':
-        threshold = df['popularity'].quantile(0.50)
-    else:  # Low
-        threshold = df['popularity'].quantile(0.25)
-
-    return df[df['popularity'] >= threshold]
-
-
-def apply_additional_filters(df):
-    """
-    Apply additional filters as specified in the config.
-    """
-    if 'market_cap_min' in ADDITIONAL_FILTERS:
-        df = df[df['market_cap'].fillna(0) >= ADDITIONAL_FILTERS['market_cap_min']]
-    if 'dividend_yield_min' in ADDITIONAL_FILTERS:
-        df = df[df['dividend_yield'].fillna(0) >= ADDITIONAL_FILTERS['dividend_yield_min']]
-    return df
-
-
-def perform_forecasting(ticker, years=FORECAST_YEARS):
-    """
-    Perform forecasting using Prophet for a given ticker.
-    Return forecasted values.
-    """
+def fetch_historical_data(symbol, period='2y'):
+    """ Fetch historical data for the given symbol using yfinance. """
     try:
-        df = yf.download(ticker, period="5y")['Adj Close'].reset_index()
-        df.rename(columns={'Date': 'ds', 'Adj Close': 'y'}, inplace=True)
-
-        model = Prophet()
-        model.fit(df)
-
-        future = model.make_future_dataframe(periods=years * 365)
-        forecast = model.predict(future)
-
-        return forecast[['ds', 'yhat']]
+        stock = yf.Ticker(symbol)
+        hist = stock.history(period=period)
+        if not hist.empty:
+            return hist
     except Exception as e:
-        print(f"Forecasting failed for {ticker}: {e}")
-        return None
+        with open('fetch_errors.log', 'a') as f:
+            f.write(f"Error fetching historical data for {symbol}: {e}\n")
+    return None
 
 
-def select_top_assets(df, asset_type, top_n):
-    """
-    Select the top N assets based on Prophet forecasting.
-    """
-    forecasts = {}
-    for ticker in df['ticker']:
-        forecast = perform_forecasting(ticker)
-        if forecast is not None:
+def forecast_performance(df, forecast_years, params):
+    """ Use Prophet to forecast the future performance of the asset. """
+    df = df.reset_index()
+    df = df.rename(columns={'Date': 'ds', 'Close': 'y'})
+
+    # Remove timezone information from the 'ds' column
+    df['ds'] = df['ds'].dt.tz_localize(None)
+
+    model = Prophet(**params)
+    model.fit(df[['ds', 'y']])
+    future = model.make_future_dataframe(periods=forecast_years * 365)
+    forecast = model.predict(future)
+    return forecast[['ds', 'yhat']].tail(forecast_years * 365)
+
+
+def select_top_forecasted_assets(financial_df, forecast_years, params):
+    """ Filter the top assets based on Prophet forecasted performance. """
+    forecasted_data = []
+    for index, row in financial_df.iterrows():
+        symbol = row['Symbol']
+        hist_data = fetch_historical_data(symbol)
+        if hist_data is not None:
+            forecast = forecast_performance(hist_data, forecast_years, params)
             final_value = forecast['yhat'].iloc[-1]
-            forecasts[ticker] = final_value
+            current_value = hist_data['Close'].iloc[-1]  # Get the most recent closing price
 
-    top_assets = sorted(forecasts, key=forecasts.get, reverse=True)[:top_n]
-    return top_assets
+            # Calculate expected growth percentage
+            growth_percentage = ((final_value - current_value) / current_value) * 100
 
+            forecasted_data.append({
+                'Symbol': symbol,
+                'Current Value': current_value,
+                'Forecasted Value': final_value,
+                'Expected Growth (%)': growth_percentage,
+                'PE Ratio': row['PE Ratio'],
+                'Market Cap': row['Market Cap'],
+                'Type': row['Type'],
+                'Country': row['Country'],
+                'Volume': row['Volume'],
+                'Forecast Reason': f"Forecasted to reach {final_value:.2f} in {FORECAST_YEARS} years based on historical performance. Expected growth of {growth_percentage:.2f}%.",
+            })
 
-def save_progress(asset_list):
-    """
-    Save progress to a temporary file.
-    """
-    with open(TEMP_FILE, 'w') as f:
-        for asset in asset_list:
-            f.write(f"{asset}\n")
-
-
-def process_assets():
-    """
-    Process assets by fetching, filtering, forecasting, and selecting the final list.
-    """
-    # Fetch and store asset data
-    fetch_assets_data()
-
-    final_assets = []
-
-    for asset_type, ratio in ASSET_TYPE_RATIO.items():
-        csv_filename = f'{asset_type}.csv'
-        if not os.path.exists(csv_filename):
-            print(f"No data available for asset type {asset_type}, skipping.")
-            continue
-
-        df = pd.read_csv(csv_filename)
-
-        # Apply filters
-        df = filter_by_pe_ratio(df)
-        df = filter_by_popularity(df)
-        df = apply_additional_filters(df)
-
-        # Select top N assets based on the ratio
-        top_n = int(TOTAL_ASSETS * ratio)
-        top_assets = select_top_assets(df, asset_type, top_n)
-        final_assets.extend(top_assets)
-
-        # Save progress to a temporary file
-        save_progress(final_assets)
-
-    # Write final asset list to the output file
-    with open(OUTPUT_FILE, 'w') as f:
-        for asset in final_assets:
-            f.write(f"{asset}\n")
-
-    print(f"Final list of assets written to {OUTPUT_FILE}")
-
-    # Clean up the temporary file
-    if os.path.exists(TEMP_FILE):
-        os.remove(TEMP_FILE)
+    forecasted_df = pd.DataFrame(forecasted_data)
+    return forecasted_df.sort_values(by='Forecasted Value', ascending=False)
 
 
-if __name__ == '__main__':
-    # Attempt to resume from the last progress
-    if os.path.exists(TEMP_FILE):
-        with open(TEMP_FILE, 'r') as f:
-            final_assets = [line.strip() for line in f.readlines()]
-    else:
-        final_assets = []
+# Step 1: Read the stock symbols from the CSV
+symbols_df = pd.read_csv('stock_symbols.csv')
+symbols = symbols_df['Symbol'].dropna().apply(convert_symbol).tolist()
 
-    process_assets()
+# Step 2: Fetch financial data
+financial_data = []
+for symbol in symbols:
+    try:
+        stock = yf.Ticker(symbol)
+        data = stock.info
+        financial_data.append({
+            'Symbol': symbol,
+            'PE Ratio': data.get('trailingPE'),
+            'Market Cap': data.get('marketCap'),
+            'Price': data.get('regularMarketPrice'),
+            'Type': data.get('quoteType'),
+            'Country': data.get('country'),
+            'Volume': data.get('regularMarketVolume'),
+        })
+    except Exception as e:
+        with open('fetch_errors.log', 'a') as f:
+            f.write(f"Error fetching data for {symbol}: {e}\n")
+
+financial_df = pd.DataFrame(financial_data)
+
+# Step 3: Ensure correct data types
+financial_df['PE Ratio'] = pd.to_numeric(financial_df['PE Ratio'], errors='coerce')
+financial_df['Market Cap'] = pd.to_numeric(financial_df['Market Cap'], errors='coerce')
+financial_df['Volume'] = pd.to_numeric(financial_df['Volume'], errors='coerce')
+
+# Drop rows where P/E Ratio is NaN
+financial_df.dropna(subset=['PE Ratio'], inplace=True)
+
+# Step 4: Apply Filters
+
+# Filter based on P/E Ratio
+financial_df = financial_df[
+    (financial_df['PE Ratio'] >= PE_RATIO['min']) &
+    (financial_df['PE Ratio'] <= PE_RATIO['max'])
+]
+
+# Filter based on country if specified
+if COUNTRY_FILTER:
+    financial_df = financial_df[financial_df['Country'].isin(COUNTRY_FILTER)]
+
+# Filter based on stock popularity (trading volume)
+volume_thresholds = {
+    'High': financial_df['Volume'].quantile(0.75),
+    'Medium': financial_df['Volume'].median(),
+    'Low': financial_df['Volume'].quantile(0.25)
+}
+
+# Allow filtering by multiple popularity levels
+volume_filter = financial_df['Volume'] >= min(volume_thresholds[pop] for pop in STOCK_POPULARITY)
+financial_df = financial_df[volume_filter]
+
+# Additional filters
+for key, value in ADDITIONAL_FILTERS.items():
+    financial_df = financial_df[financial_df[key] == value]
+
+# Step 5: Forecasting and Select Top Assets
+
+forecasted_assets = select_top_forecasted_assets(financial_df, FORECAST_YEARS, PROPHET_PARAMS)
+
+# Step 6: Apply Asset Type Ratio to Final Selection
+
+selected_assets = pd.DataFrame()
+
+for asset_type, ratio in ASSET_TYPE_RATIO.items():
+    if ratio > 0:
+        count = max(int(TOTAL_ASSETS * ratio), 1)  # Ensure at least 1 asset is selected if ratio > 0
+        filtered_df = forecasted_assets[forecasted_assets['Type'] == asset_type]
+        top_assets = filtered_df.head(count)
+        selected_assets = pd.concat([selected_assets, top_assets])
+
+# If not enough assets are selected (e.g., due to missing data), repeat selection to fill the quota
+while len(selected_assets) < TOTAL_ASSETS:
+    remaining_count = TOTAL_ASSETS - len(selected_assets)
+    additional_assets = forecasted_assets[~forecasted_assets['Symbol'].isin(selected_assets['Symbol'])].head(
+        remaining_count)
+    selected_assets = pd.concat([selected_assets, additional_assets])
+
+# Step 7: Add Detailed Reasoning for Selection
+
+def generate_reason(row):
+    """ Generate detailed reason for selecting this asset. """
+    reason = f"Selected based on forecasted value of {row['Forecasted Value']:.2f}. "
+    reason += f"Current Value: {row['Current Value']:.2f}, Expected Growth: {row['Expected Growth (%)']:.2f}%. "
+    reason += f"PE Ratio: {row['PE Ratio']}, Market Cap: {row['Market Cap']}. "
+    reason += row['Forecast Reason']
+    return reason
+
+selected_assets['Reason'] = selected_assets.apply(generate_reason, axis=1)
+
+# Step 8: Save the selected assets to a CSV file
+selected_assets.to_csv(OUTPUT_FILE, index=False)
+
+print(f"Top {TOTAL_ASSETS} assets saved to '{OUTPUT_FILE}'")
