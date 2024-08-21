@@ -1,6 +1,6 @@
 # The Ultimate Open Robo-Advisor Project
 
-*Originally developed by Kevin Vecmanis (VanAurum open robo-advisor)*
+*Original optimizer algorithm developed by Kevin Vecmanis (VanAurum open robo-advisor)*
 
 The original project only included a portfolio optimizer and a rebalancer, but what if you don't know where to invest? And how to deal with backtesting? And what if you think MPT is outdated and the Black Litterman strategy makes more sense for you? Since I had all these questions, I decided to develop an ultimate tool that provides a list of assets for building a portfolio and gives you all the necessary tools for backtesting your portfolio and even visualizes it for better understanding.
 
